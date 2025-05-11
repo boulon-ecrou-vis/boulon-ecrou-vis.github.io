@@ -6,16 +6,12 @@ title: Are men talking too much?
 
 <body>
   <div class="alert alert-info alert-ga text-center" role="alert">
-    <a href="https://www.genderavenger.com/blog/are-men-talking-too-much" class="ga" target="_blank">
-      We're teaming up with GenderAvenger to measure #WhoTalks! Learn more &raquo;
-    </a>
-    <a class="icon-link" href="https://twitter.com/intent/tweet?text=I+just+watched+X.+men+talked+X%25+of+the+time!+%23WhoTalks" target="_blank">
-      &nbsp;&nbsp;<i class="fa fa-lg fa-twitter" aria-hidden="true"></i>
+    <a href="http://arementalkingtoomuch.com/" class="ga" target="_blank">
+      Check out the original site by Cathy Deng http://arementalkingtoomuch.com
     </a>
   </div>
   <div class="content">
       <div class="row-fluid">
-
 
           <div class="col-sm-8 col-sm-offset-2 center">
             <br/>
@@ -29,18 +25,35 @@ title: Are men talking too much?
               <div class="col-xs-6">
                 <a class="btn btn-lg btn-default" id="dude">a dude</a>
                 <p id="dude-display">00:00</p>
+                <div style="display: none" class="head-count-div">
+                  <label for="number-dudes">Number dudes</label>
+                  <input type="number" class="number-person" id="number-dudes" min="1" value="1">
+                </div>
               </div>
               <div class="col-xs-6">
                 <a class="btn btn-lg btn-default" id="not-dude">not a dude</a>
                 <p id="not-dude-display">00:00</p>
+                <div style="display: none" class="head-count-div">
+                  <label for="number-non-dudes">Number non-dudes</label>
+                  <input type="number" class="number-person" id="number-non-dudes" min="1" value="1">
+                </div>
               </div>
             </div>
             <div class="clearfix"></div>
 
-            <br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            <button type="button" class="btn" id="show-head-count">Show head count</button>
+
+            <div class="row-fluid" id="number-people-div">
+              <div class="col-xs-6">
+              </div>
+              <div class="col-xs-6">
+              </div>
+            </div>
+            <div class="clearfix"></div>
+
+            <br/><br/><br/><br/><br/>
             <p class="small"><a class="muted-link" href="https://github.com/cathydeng/are-men-talking-too-much">made with ♡ by Cathy Deng</a></p>
-
-
+            <p class="small"><a class="muted-link" href="https://github.com/samuelskanberg/are-men-talking-too-much">Further developed a bit by Samuel Skånberg</a></p>
           </div>
       </div>
   </div>
@@ -71,10 +84,14 @@ title: Are men talking too much?
 
       var dude_t;
       var not_dude_t;
+      var show_head_count = false;
 
       var $ans = $('#ans');
       var $dude = $('#dude');
       var $not_dude = $('#not-dude');
+      var $number_dudes = $('#number-dudes');
+      var $number_non_dudes = $('#number-non-dudes');
+      var $show_head_count_button = $('#show-head-count');
 
       function num_pad(num) {
         if (num < 10) {
@@ -82,6 +99,30 @@ title: Are men talking too much?
         } else {
           return num;
         }
+      }
+
+      function display(tally, display_sel) {
+          if (tally.hours !== 0) {
+            $(display_sel).html(num_pad(tally.hours) + ':' + num_pad(tally.minutes) + ':' + num_pad(tally.seconds));
+          } else {
+            $(display_sel).html(num_pad(tally.minutes) + ':' + num_pad(tally.seconds));
+          }
+
+          var d_tot = (dude.time.hours * 3600) + (dude.time.minutes * 60) + dude.time.seconds;
+          var l_tot = (not_dude.time.hours * 3600) + (not_dude.time.minutes * 60) + not_dude.time.seconds;
+          if (d_tot + l_tot == 0) {
+            return ;
+          }
+          var pct = parseInt(d_tot / (d_tot + l_tot) * 100, 10);
+          var percentage_info = '<div class="pct-div"><span id="pct">' + pct + '</span>% men</div>';
+          var relative_percentage_info = "";
+          if (show_head_count) {
+              var number_dudes = parseInt($('#number-dudes').val());
+              var number_non_dudes = parseInt($('#number-non-dudes').val());
+              var rel_pct = parseInt((d_tot/number_dudes) / ((d_tot/number_dudes) + (l_tot/number_non_dudes)) * 100, 10);
+              relative_percentage_info = '<div class="rel-pct-div"><span id="rel-pct">(' + rel_pct + '</span>% men relative)</div>';
+          }
+          $ans.html('<div class="all-percentages">'+percentage_info+relative_percentage_info+'</div>');
       }
 
       function add(tally, display_sel) {
@@ -94,18 +135,44 @@ title: Are men talking too much?
           tally.hours++;
           tally.minutes = 0;
         }
-
-        if (tally.hours !== 0) {
-          $(display_sel).html(num_pad(tally.hours) + ':' + num_pad(tally.minutes) + ':' + num_pad(tally.seconds));
-        } else {
-          $(display_sel).html(num_pad(tally.minutes) + ':' + num_pad(tally.seconds));
-        }
-
-        var d_tot = (dude.time.hours * 3600) + (dude.time.minutes * 60) + dude.time.seconds;
-        var l_tot = (not_dude.time.hours * 3600) + (not_dude.time.minutes * 60) + not_dude.time.seconds;
-        var pct = parseInt(d_tot / (d_tot + l_tot) * 100, 10);
-        $ans.html('<span id="pct">' + pct + '</span>% men');
+        display(tally, display_sel);
       }
+
+      $show_head_count_button.click(function() {
+        show_head_count = !show_head_count;
+
+        if (show_head_count) {
+          $('.head-count-div').show();
+          $show_head_count_button.html('Hide head count');
+          display(dude.time, '#dude-display');
+          display(not_dude.time, '#not-dude-display');
+        } else {
+          $('.head-count-div').hide();
+          $show_head_count_button.html('Show head count');
+          display(dude.time, '#dude-display');
+          display(not_dude.time, '#not-dude-display');
+        }
+      });
+
+      $number_dudes.change(function() {
+        // Why min value of one? Because otherwise there is no point of
+        // meassuring speaker time. Min value == 1 is already set but if one
+        // enters a number using the keyboard, we have to check anyway
+        if (!(parseInt($number_dudes.val()) > 0)) {
+          $number_dudes.val(1);
+        }
+        display(dude.time, '#dude-display');
+      });
+
+      $number_non_dudes.change(function() {
+        // Why min value of one? Because otherwise there is no point of
+        // meassuring speaker time. Min value == 1 is already set but if one
+        // enters a number using the keyboard, we have to check anyway
+        if (!(parseInt($number_non_dudes.val()) > 0)) {
+          $number_non_dudes.val(1);
+        }
+        display(not_dude.time, '#not-dude-display');
+      });
 
       $dude.click(function() {
 
